@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}{{ doc.reference_number }} - PMS{% endblock %}
+{% block page_title %}Document Detail{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-text me-2"></i>{{ doc.reference_number }}</span>
+                {% with doc.status as s %}
+                <span class="badge fs-6 {% if s == 'approved' or s == 'esigned' %}bg-success{% elif s == 'rejected' or s == 'return_for_revision' %}bg-danger{% elif s == 'archived' %}bg-secondary{% elif s == 'pending_review' %}bg-warning text-dark{% elif s == 'released' %}bg-primary{% else %}bg-light text-dark border{% endif %}">
+                    {{ doc.get_status_display }}
+                </span>
+                {% endwith %}
+            </div>
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">{{ doc.title }}</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted fw-semibold" style="width:140px">Source:</td>
+                                <td><span class="badge {% if doc.source == 'internal' %}bg-info{% else %}bg-warning text-dark{% endif %}">{{ doc.get_source_display }}</span></td></tr>
+                            <tr><td class="text-muted fw-semibold">Classification:</td>
+                                <td>{{ doc.get_classification_display }}</td></tr>
+                            <tr><td class="text-muted fw-semibold">Created By:</td>
+                                <td>{{ doc.created_by }}</td></tr>
+                            <tr><td class="text-muted fw-semibold">Created At:</td>
+                                <td>{{ doc.created_at|date:"M d, Y H:i" }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr><td class="text-muted fw-semibold" style="width:140px">Origin Dept.:</td>
+                                <td>{{ doc.origin_department.name|default:"—" }}</td></tr>
+                            <tr><td class="text-muted fw-semibold">Current Dept.:</td>
+                                <td>{{ doc.current_department.name|default:"—" }}</td></tr>
+                            <tr><td class="text-muted fw-semibold">Assigned To:</td>
+                                <td>{{ doc.assigned_to|default:"—" }}</td></tr>
+                            {% if doc.correspondent_name %}
+                            <tr><td class="text-muted fw-semibold">Correspondent:</td>
+                                <td>{{ doc.correspondent_name }} ({{ doc.correspondent_agency }})</td></tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                {% if doc.description %}
+                <div class="bg-light rounded p-3 mt-2">
+                    <p class="mb-0 small">{{ doc.description|linebreaks }}</p>
+                </div>
+                {% endif %}
+                {% if doc.file %}
+                <div class="mt-3">
+                    <a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-download me-1"></i>Download Attachment
+                    </a>
+                </div>
+                {% endif %}
+                {% if doc.esignature %}
+                <div class="mt-3">
+                    <p class="fw-semibold small mb-1">E-Signature:</p>
+                    <img src="{{ doc.esignature.url }}" alt="E-signature" style="max-height:80px; border:1px solid #ddd; border-radius:4px; padding:4px;">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons based on status and role -->
+        <div class="card mb-3">
+            <div class="card-header py-3">Available Actions</div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                {% if doc.status == 'draft' and doc.source == 'internal' %}
+                    {% if user.role in 'dept_head,super_admin,governor,executive' or user == doc.created_by %}
+                    <a href="{% url 'document_review' doc.pk %}" class="btn btn-primary">
+                        <i class="bi bi-eye me-1"></i>Review Document
+                    </a>
+                    {% endif %}
+                {% endif %}
+                {% if doc.status == 'pending_review' %}
+                    {% if user == doc.assigned_to or user.role in 'dept_sender_receiver' %}
+                    <a href="{% url 'document_process' doc.pk %}" class="btn btn-info text-white">
+                        <i class="bi bi-gear me-1"></i>Process Document
+                    </a>
+                    {% endif %}
+                    {% if user.role in 'dept_head,super_admin,governor,executive' %}
+                    <a href="{% url 'document_review' doc.pk %}" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Review & Approve
+                    </a>
+                    {% if doc.source == 'external' and not doc.classification %}
+                    <a href="{% url 'document_classify' doc.pk %}" class="btn btn-warning">
+                        <i class="bi bi-tag me-1"></i>Classify
+                    </a>
+                    {% endif %}
+                    {% if not doc.assigned_to %}
+                    <a href="{% url 'document_assign' doc.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-check me-1"></i>Assign Officer
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                {% endif %}
+                {% if doc.status == 'approved' %}
+                    {% if user.role in 'dept_head,super_admin,governor,executive' %}
+                    <a href="{% url 'document_esign' doc.pk %}" class="btn btn-success">
+                        <i class="bi bi-pen me-1"></i>E-Sign Document
+                    </a>
+                    {% endif %}
+                {% endif %}
+                {% if doc.status == 'esigned' %}
+                    {% if user.role in 'dept_head,super_admin,governor,executive' %}
+                    <a href="{% url 'document_route_decision' doc.pk %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Route / Release
+                    </a>
+                    {% endif %}
+                {% endif %}
+                {% if doc.status == 'return_for_revision' %}
+                    {% if user == doc.assigned_to or user.role == 'super_admin' %}
+                    <a href="{% url 'document_process' doc.pk %}" class="btn btn-warning">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Revise & Resubmit
+                    </a>
+                    {% endif %}
+                {% endif %}
+                {% if doc.status in 'released,returned' %}
+                    <a href="{% url 'document_notify' doc.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-bell me-1"></i>Notify & Archive
+                    </a>
+                {% endif %}
+                <a href="{% url 'document_list' %}" class="btn btn-outline-secondary ms-auto">
+                    <i class="bi bi-arrow-left me-1"></i>Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Routing History -->
+        {% if routings %}
+        <div class="card mb-3">
+            <div class="card-header py-3">Routing History</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light"><tr><th>From</th><th>To</th><th>By</th><th>Date</th><th>Notes</th></tr></thead>
+                        <tbody>
+                        {% for r in routings %}
+                        <tr>
+                            <td>{{ r.from_department.name|default:"—" }}</td>
+                            <td>{{ r.to_department.name|default:"—" }}</td>
+                            <td>{{ r.forwarded_by }}</td>
+                            <td class="small text-muted">{{ r.forwarded_at|date:"M d, Y H:i" }}</td>
+                            <td class="small">{{ r.notes|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Activity Log -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3">Activity Log</div>
+            <div class="card-body">
+                <div class="timeline">
+                {% for log in logs %}
+                <div class="timeline-item">
+                    <p class="mb-0 small fw-semibold">{{ log.get_action_display }}</p>
+                    <p class="mb-0 text-muted" style="font-size:0.78rem">{{ log.user }} • {{ log.timestamp|date:"M d, Y H:i" }}</p>
+                    {% if log.notes %}<p class="mb-0 text-muted small fst-italic">{{ log.notes }}</p>{% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted small">No activity yet</p>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}E-Sign Document{% endblock %}
+{% block page_title %}E-Sign Document{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-7">
+<div class="card">
+<div class="card-header py-3"><i class="bi bi-pen me-2"></i>E-Sign: {{ doc.reference_number }}</div>
+<div class="card-body">
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle me-2"></i>This document has been <strong>approved</strong>. Please apply your electronic signature to finalize.
+    </div>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Upload Signature Image (optional)</label>
+        <input type="file" name="esignature" class="form-control" accept="image/*">
+        <div class="form-text">Upload a PNG/JPG of your signature. Leave blank to proceed without image signature.</div>
+    </div>
+    <div class="mb-4">
+        <div class="border rounded p-3 bg-light text-center">
+            <canvas id="sig-canvas" width="500" height="150" style="border:1px dashed #ccc; border-radius:4px; cursor:crosshair; background:white;"></canvas>
+            <div class="mt-2">
+                <button type="button" onclick="clearSig()" class="btn btn-sm btn-outline-secondary">Clear Canvas</button>
+                <small class="text-muted ms-2">Or draw your signature above</small>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success"><i class="bi bi-pen me-2"></i>Apply E-Signature</button>
+        <a href="{% url 'document_detail' doc.pk %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+    </form>
+</div>
+</div>
+</div></div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const canvas = document.getElementById('sig-canvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+canvas.addEventListener('mousemove', e => { if (!drawing) return; ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); });
+canvas.addEventListener('mouseup', () => drawing = false);
+function clearSig() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+</script>
+{% endblock %}

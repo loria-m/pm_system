@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Route Document{% endblock %}
+{% block page_title %}Route / Release Document{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+<div class="card">
+<div class="card-header py-3"><i class="bi bi-arrow-right-circle me-2"></i>Next Action: {{ doc.reference_number }}</div>
+<div class="card-body">
+    <p class="text-muted">Document has been e-signed. Choose the next action:</p>
+    <form method="post">{% csrf_token %}
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-2 border-primary h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-arrow-right-square fs-2 text-primary mb-2 d-block"></i>
+                    <h6 class="fw-bold">Route to Another Office</h6>
+                    <p class="small text-muted mb-3">Forward to another department for further action</p>
+                    <select name="to_department" class="form-select mb-2">
+                        <option value="">Select Department...</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.pk }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="notes" class="form-control mb-2" placeholder="Routing notes...">
+                    <button type="submit" name="action" value="route" class="btn btn-primary w-100">
+                        <i class="bi bi-send me-1"></i>Route Document
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="row g-3 h-100">
+                {% if doc.source == 'external' %}
+                <div class="col-12">
+                    <div class="card border h-100">
+                        <div class="card-body text-center py-3">
+                            <i class="bi bi-envelope-check fs-3 text-success mb-2 d-block"></i>
+                            <h6 class="fw-bold">Release to Correspondent</h6>
+                            <p class="small text-muted mb-3">Send response back to {{ doc.correspondent_name|default:"correspondent" }}</p>
+                            <button type="submit" name="action" value="release_correspondent" class="btn btn-success w-100">
+                                <i class="bi bi-send-check me-1"></i>Release to Correspondent
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <div class="card border h-100">
+                        <div class="card-body text-center py-3">
+                            <i class="bi bi-arrow-return-left fs-3 text-warning mb-2 d-block"></i>
+                            <h6 class="fw-bold">Return to Origin</h6>
+                            <p class="small text-muted mb-2">Return document to origin department</p>
+                            <button type="submit" name="action" value="return_origin" class="btn btn-warning w-100">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Return to Origin
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card border h-100">
+                        <div class="card-body text-center py-3">
+                            <i class="bi bi-box-arrow-up-right fs-3 text-danger mb-2 d-block"></i>
+                            <h6 class="fw-bold">Release to External Agency</h6>
+                            <p class="small text-muted mb-2">Send to external party/agency</p>
+                            <button type="submit" name="action" value="release_agency" class="btn btn-danger w-100">
+                                <i class="bi bi-send me-1"></i>Release to Agency
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'document_detail' doc.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Document
+    </a>
+    </form>
+</div>
+</div>
+</div></div>
+{% endblock %}

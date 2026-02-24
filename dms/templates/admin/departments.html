@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Departments{% endblock %}
+{% block page_title %}Manage Departments{% endblock %}
+{% block content %}
+<div class="row g-3">
+<div class="col-lg-4">
+<div class="card">
+<div class="card-header py-3">Add Department</div>
+<div class="card-body">
+<form method="post">{% csrf_token %}
+<div class="mb-3">
+<label class="form-label fw-semibold">Department Name</label>
+<input type="text" name="name" class="form-control" placeholder="e.g. Finance Office" required>
+</div>
+<div class="mb-3">
+<label class="form-label fw-semibold">Department Code</label>
+<input type="text" name="code" class="form-control" placeholder="e.g. FIN" required>
+</div>
+<button type="submit" class="btn btn-primary w-100">Add Department</button>
+</form>
+</div>
+</div>
+</div>
+<div class="col-lg-8">
+<div class="card">
+<div class="card-header py-3">Departments <span class="badge bg-secondary ms-2">{{ departments.count }}</span></div>
+<div class="card-body p-0">
+<table class="table table-hover mb-0">
+<thead class="table-light"><tr><th>Code</th><th>Name</th><th>Created</th><th>Members</th></tr></thead>
+<tbody>
+{% for dept in departments %}
+<tr>
+<td><code>{{ dept.code }}</code></td>
+<td>{{ dept.name }}</td>
+<td class="text-muted small">{{ dept.created_at|date:"M d, Y" }}</td>
+<td><span class="badge bg-light text-dark border">{{ dept.members.count }} users</span></td>
+</tr>
+{% empty %}
+<tr><td colspan="4" class="text-center text-muted py-4">No departments yet</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+{% endblock %}

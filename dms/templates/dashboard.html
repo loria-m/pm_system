@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - PMS{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#1e40af,#3b82f6)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 opacity-75 small">Total Documents</p>
+                    <h2 class="fw-bold mb-0">{{ total }}</h2>
+                </div>
+                <i class="bi bi-file-earmark-text fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#d97706,#f59e0b)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 opacity-75 small">Pending Review</p>
+                    <h2 class="fw-bold mb-0">{{ pending }}</h2>
+                </div>
+                <i class="bi bi-hourglass-split fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#059669,#10b981)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 opacity-75 small">Approved</p>
+                    <h2 class="fw-bold mb-0">{{ approved }}</h2>
+                </div>
+                <i class="bi bi-check-circle fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#7c3aed,#a855f7)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="mb-1 opacity-75 small">Archived</p>
+                    <h2 class="fw-bold mb-0">{{ archived }}</h2>
+                </div>
+                <i class="bi bi-archive fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <span>Recent Documents</span>
+                <a href="{% url 'document_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Reference</th>
+                                <th>Title</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for doc in recent_docs %}
+                        <tr onclick="window.location='{% url 'document_detail' doc.pk %}'" style="cursor:pointer">
+                            <td><code>{{ doc.reference_number }}</code></td>
+                            <td>{{ doc.title|truncatechars:40 }}</td>
+                            <td>
+                                <span class="badge {% if doc.source == 'internal' %}bg-info{% else %}bg-warning text-dark{% endif %}">
+                                    {{ doc.get_source_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% with doc.status as s %}
+                                <span class="badge {% if s == 'approved' or s == 'esigned' %}bg-success{% elif s == 'rejected' or s == 'return_for_revision' %}bg-danger{% elif s == 'archived' %}bg-secondary{% elif s == 'pending_review' %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                                    {{ doc.get_status_display }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td class="text-muted small">{{ doc.updated_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No documents yet</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3">Quick Actions</div>
+            <div class="card-body d-grid gap-2">
+                <a href="{% url 'document_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Create New Document
+                </a>
+                <a href="{% url 'document_list' %}?status=pending_review" class="btn btn-outline-warning">
+                    <i class="bi bi-hourglass me-2"></i>Pending Review ({{ pending }})
+                </a>
+                <a href="{% url 'notifications' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-bell me-2"></i>View Notifications
+                    {% if unread_notifications %}
+                    <span class="badge bg-danger ms-1">{{ unread_notifications }}</span>
+                    {% endif %}
+                </a>
+                {% if user.role == 'super_admin' or user.is_superuser %}
+                <hr class="my-1">
+                <a href="{% url 'manage_users' %}" class="btn btn-outline-dark">
+                    <i class="bi bi-people me-2"></i>Manage Users
+                </a>
+                <a href="{% url 'manage_departments' %}" class="btn btn-outline-dark">
+                    <i class="bi bi-building me-2"></i>Departments
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header py-3">Your Profile</div>
+            <div class="card-body">
+                <p class="mb-1"><strong>Name:</strong> {{ user.get_full_name|default:user.username }}</p>
+                <p class="mb-1"><strong>Role:</strong> {{ user.get_role_display }}</p>
+                <p class="mb-0"><strong>Department:</strong> {{ user.department.name|default:"Not assigned" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

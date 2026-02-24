@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Create Document - PMS{% endblock %}
+{% block page_title %}Create New Document{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header py-3">
+                <i class="bi bi-file-earmark-plus me-2"></i>New Document
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Document Title <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Document Source <span class="text-danger">*</span></label>
+                        {{ form.source }}
+                        <div class="form-text">
+                            <strong>Internal:</strong> Created within the organization.
+                            <strong>External:</strong> Received from outside (correspondent/agency).
+                        </div>
+                    </div>
+                    <div id="correspondent-fields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Correspondent Name</label>
+                                {{ form.correspondent_name }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Correspondent Agency</label>
+                                {{ form.correspondent_agency }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Attach File</label>
+                        {{ form.file }}
+                        <div class="form-text">Supported: PDF, DOCX, XLSX, PNG, JPG (max 10MB)</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-2"></i>Create Document
+                        </button>
+                        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const sourceField = document.querySelector('[name=source]');
+const corrFields = document.getElementById('correspondent-fields');
+function toggleCorr() {
+    corrFields.style.display = sourceField.value === 'external' ? 'block' : 'none';
+}
+sourceField.addEventListener('change', toggleCorr);
+toggleCorr();
+</script>
+{% endblock %}

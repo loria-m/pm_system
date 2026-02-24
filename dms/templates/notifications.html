@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8">
+<div class="card">
+<div class="card-header py-3">All Notifications <span class="badge bg-secondary ms-2">{{ notifs.count }}</span></div>
+<div class="card-body p-0">
+    {% for notif in notifs %}
+    <div class="d-flex gap-3 p-3 border-bottom {% if not notif.is_read %}bg-blue-50{% endif %}">
+        <div class="flex-shrink-0">
+            <div class="rounded-circle d-flex align-items-center justify-content-center {% if notif.is_read %}bg-light{% else %}bg-primary{% endif %}" style="width:36px;height:36px">
+                <i class="bi bi-bell {% if notif.is_read %}text-muted{% else %}text-white{% endif %}"></i>
+            </div>
+        </div>
+        <div class="flex-grow-1">
+            <p class="mb-1 {% if not notif.is_read %}fw-semibold{% endif %}">{{ notif.message }}</p>
+            <div class="d-flex gap-3 align-items-center">
+                <small class="text-muted">{{ notif.created_at|date:"M d, Y H:i" }}</small>
+                {% if notif.document %}
+                <a href="{% url 'document_detail' notif.document.pk %}" class="btn btn-xs btn-sm btn-outline-primary py-0 px-2" style="font-size:0.75rem">View Document</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-bell-slash fs-2 d-block mb-2"></i>
+        No notifications
+    </div>
+    {% endfor %}
+</div>
+</div>
+</div></div>
+{% endblock %}
